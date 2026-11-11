@@ -28,7 +28,13 @@ from seasafe.contracts import (
             seed_id="seed-1",
             config_hash="config-hash",
             output_dir="artifacts/run-1",
-            metadata={"commit": "abc123", "seed_manifest_hash": "seed-hash"},
+            metadata={
+                "pair_id": "pair-1",
+                "provider": "fake",
+                "git_commit": "abc123",
+                "seed_manifest_hash": "seed-hash",
+                "requested_surface": "controller_update",
+            },
         ),
         UpdateProposal(
             update_id="update-1",
@@ -63,6 +69,7 @@ from seasafe.contracts import (
             status=TaskStatus.COMPLETED,
             success=False,
             safety_violation=None,
+            effective_surface="none",
             usage={"prompt_tokens": 12, "completion_tokens": 4},
             cost=None,
             cost_category=CostCategory.AGENT,

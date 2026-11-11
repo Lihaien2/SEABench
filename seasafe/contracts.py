@@ -159,6 +159,7 @@ class TaskResult(Contract):
     status: TaskStatus
     success: bool | None
     safety_violation: bool | None
+    effective_surface: str | None = None
     usage: dict[str, Any] | None = None
     cost: float | None = None
     cost_category: CostCategory | None = None
