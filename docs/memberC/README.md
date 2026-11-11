@@ -22,6 +22,7 @@
 | `smoke_test_local.log` | 本地 smoke test 原始日志（45 个检查点全通过，步骤 5 跳过） |
 | `progress_dashboard.html` | 可视化进度看板（浅色主题，可下载后本地打开） |
 | `snapshot_verification.log` | 714 个文件 Git blob SHA1 逐字节校验记录（0 不符、0 缺失） |
+| `C1_writable_surfaces.md` | **C1 阶段正式交付**（只读核查）：三种可写表面、写入边界图、PR-0 字段对照、接口设计、最小测试列表 |
 
 ## 已核实的事实
 
@@ -44,5 +45,6 @@
 
 ## 更新记录
 
+- 2026-11-11 20:47：完成 **C1（只读核查，不改代码）**，新增 `C1_writable_surfaces.md`；确认 B 的 PR-0 合同已落地 `main @ 432fe2cb`，并发现 `snapshot_ref` 字段缺口与 `UpdateProposal` 同名冲突。下一步待确认后进入 C2/C3。
 - 2026-11-11 20:08：24.06 MB `stage1.joblib` 续传完成；714 / 714 文件 Git blob SHA1 校验通过，报告、看板与说明中的「713 / 714」已更正。
 - 注：`main` 上 `docs/reproduction_progress.md` 与 `docs/reproduction_smoke_test.log` 为按本人要求保留的旧版本，数字未同步；本分支 `docs/memberC/` 为最新。
