@@ -1,0 +1,58 @@
+
+=== 1. Workspace initialisation ===
+  ✓  stale runtime state removed during reset
+  ✓  IDENTITY.md present
+  ✓  SOUL.md present
+  ✓  AGENTS.md present
+  ✓  EVOLUTION.md present
+  ✓  SHORT_TERM_MEMORY.md present
+  ✓  SHORT_TERM_MEMORY_COMPACTION.md present
+  ✓  LONG_TERM_MEMORY.md present
+  ✓  LONG_TERM_MEMORY_SUMMARIZATION.md present
+  ✓  TOOLS.md present
+  ✓  USER.md present
+  ✓  MEMORY.md present
+  ✓  meta/source_catalog.json present
+  ✓  finance/banking/transactions_24m.json present
+  ✓  calendar/working/events_past_12m_future_6m.json present
+  ✓  notes/knowledge/meeting_notes_365d.json present
+  ✓  health/fitness/workouts_12m.json present
+  ✓  legacy export alice_calendar.json not present in workspace
+  ✓  legacy export alice_emails.json not present in workspace
+  ✓  legacy export alice_banking.json not present in workspace
+  ✓  legacy export alice_fitness.json not present in workspace
+  ✓  legacy export alice_notes.json not present in workspace
+
+=== 2. System prompt assembly ===
+  ✓  IDENTITY.md block in system prompt
+  ✓  SOUL.md block in system prompt
+  ✓  AGENTS.md block in system prompt
+  ✓  EVOLUTION.md block in system prompt
+  ✓  SHORT_TERM_MEMORY.md block in system prompt
+  ✓  SHORT_TERM_MEMORY_COMPACTION.md block in system prompt
+  ✓  LONG_TERM_MEMORY.md block in system prompt
+  ✓  LONG_TERM_MEMORY_SUMMARIZATION.md block in system prompt
+  ✓  TOOLS.md block in system prompt
+  ✓  USER.md block in system prompt
+  ✓  MEMORY.md block in system prompt
+
+=== 3. Memory writes ===
+  ✓  self-improvement tools are restricted to the active evolution surface
+  ✓  update_memory wrote to MEMORY.md
+  ✓  record_learning wrote 2026-11-11-smoke-test-learning.md
+  ✓  create_skill wrote per-skill SKILL.md and main.py
+  ✓  create_tool wrote created_tools/echo_json_keys and refreshed TOOLS.md
+  ✓  created tool is callable immediately after registration
+
+=== 4. apply_controller_update gate ===
+  ✓  valid SOUL.md update accepted and written to disk
+  ✓  USER.md write correctly blocked (not in allowed set)
+  ✓  suspicious phrase correctly blocked by gate
+  ✓  forbidden marker correctly blocked by gate
+  ✓  immutable environment and controller seeds unchanged
+  ✓  runtime artifacts confined to workspace/artifacts
+
+=== 5. Live agent session ===
+  SKIP  OPENROUTER_API_KEY not set — skipping live API call
+
+=== All local checks passed ===
