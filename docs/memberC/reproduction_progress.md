@@ -11,7 +11,7 @@
 
 | 编号 | 项目 | 状态 | 说明 |
 |---|---|---|---|
-| 1 | 官方仓库代码与数据获取 | ✅ 完成 | 714 个文件中 713 个已落地且字节数一致 |
+| 1 | 官方仓库代码与数据获取 | ✅ 完成 | 714 / 714 个文件全部落地，Git blob SHA1 与官方 tree 逐一一致 |
 | 2 | 48 条任务序列核对 | ✅ 完成 | 3 个演化面 × 16 条，与论文一致 |
 | 3 | 本地 smoke test（步骤 1–4） | ✅ 全部通过 | 45 个检查点全绿，退出码 0 |
 | 4 | 步骤 5 真实智能体会话 | ⏸ 按设计跳过 | 未配置 `OPENROUTER_API_KEY`，脚本主动 SKIP |
@@ -57,10 +57,15 @@
 
 1. `GET /repos/{owner}/{repo}/git/trees/main?recursive=1` 取得完整清单（1092 条目 / 714 blob / 37.03 MB，`truncated: false`）；
 2. 逐文件从 `raw.githubusercontent.com` 拉取，14 线程并发、按清单字节数校验、失败独立重试；
-3. 结果：**712 个小文件 100% 成功、零失败**，另有 3.1 MB 检查点续传成功。
+3. 大文件采用 HTTP Range 断点续传（`curl -C -`），断流后独立重试；
+4. 结果：**712 个小文件 100% 成功、零失败**；3.1 MB 检查点一次完成；24.06 MB 的
+   `prompt_optimization_analysis/reasoning_monitor/checkpoint/selector_verifier/stage1.joblib`
+   在第 7 次续传（20:07:55）补齐，退出码 0。
 
-遗留项：`prompt_optimization_analysis/reasoning_monitor/checkpoint/selector_verifier/stage1.joblib`
-（24.06 MB）仍在断点续传中。该文件仅服务于 CoT monitor 后验分析，**不影响 benchmark 主流程与本次 smoke test**。
+最终对全部 714 个文件按 Git 对象格式计算 blob SHA1（`sha1("blob <size>\\0" + 内容)`），
+与 Git Trees API 返回的 `sha` 字段逐一比对：**714 命中、0 不符、0 缺失**，
+tree 根 `8e0a108cddf069bf640d565edbd712891f230384`、`truncated: false`。
+至此本地快照与官方提交内容**逐字节等价**，无遗留文件。
 
 ---
 
@@ -70,11 +75,12 @@
 
 | 检查项 | 结果 |
 |---|---|
-| 清单文件总数 | 714 blob，713 个存在且大小一致，0 个大小不符 |
+| 清单文件总数 | 714 blob，714 个存在且 Git blob SHA1 一致，0 不符、0 缺失 |
 | 任务序列 | `tasks/` 共 **48** 个 YAML |
 | 演化面分布 | `controller_update` 16 / `short_term_memory` 16 / `tools_skills` 16 |
 | 环境种子 | `env_assets/` 89 个文件；`env_assets_utility_test/` 383 个反事实环境文件 |
-| 落地体积 | 13,984,934 字节（不含 24 MB 检查点） |
+| 落地体积 | 39,097,215 字节（含 24,056,075 字节 `stage1.joblib`） |
+| 校验方式 | `sha1("blob <size>\0" + bytes)` 对比 Git Trees API 的 `sha` |
 
 ### 3.2 本地运行时契约验证（核心结果）
 
@@ -115,7 +121,9 @@ python "$REPO_ROOT/scripts/test_smoke.py"
 | B | Apptainer 沙箱隔离 | Windows 无 Apptainer；WSL 被禁；Docker daemon 未运行 | 换 Linux 主机（云端/实验室机器），构建 `sandbox/sandbox.def` 生成 `.sif` |
 | C | 原论文数值复现 | 主实验模型为 `openai/gpt-5.6-luna`；`runtime/config.py` 默认却是 `moonshotai/kimi-k2.5` | 使用原论文模型与相同 judge 模型；**换模型只能作为扩展研究，结果不能标注为原论文复现** |
 | D | 任务序列优化流水线 | TextGrad 搜索需大量 API 调用 | A + B + 预算 |
-| E | 24 MB `stage1.joblib` | 单文件传输持续断流 | 网络改善或换机器；仅影响 CoT monitor 后验分析 |
+
+> 原 E 项（24 MB `stage1.joblib` 下载）已于 2026-11-11 20:07 解除：断点续传完成且 SHA1 校验通过，
+> 本地快照与官方提交逐字节等价，故从本表移除。
 
 ---
 
