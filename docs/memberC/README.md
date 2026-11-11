@@ -21,11 +21,12 @@
 | `reproduction_progress.md` | SEABench 轻微复现进度报告（代码/数据核对 + 本地运行时契约验证） |
 | `smoke_test_local.log` | 本地 smoke test 原始日志（45 个检查点全通过，步骤 5 跳过） |
 | `progress_dashboard.html` | 可视化进度看板（浅色主题，可下载后本地打开） |
+| `snapshot_verification.log` | 714 个文件 Git blob SHA1 逐字节校验记录（0 不符、0 缺失） |
 
 ## 已核实的事实
 
 - 官方仓库锁定提交 `8e0a108cddf069bf640d565edbd712891f230384`；共同仓库 `main` 同一提交。
-- `tasks/` 共 48 个 YAML，3 个演化面各 16 条；官方清单 714 个文件中 713 个落地且字节数一致（仅缺 24 MB CoT 检查点，不影响主流程）。
+- `tasks/` 共 48 个 YAML，3 个演化面各 16 条；官方清单 714 / 714 个文件全部落地，Git blob SHA1 与官方 tree 逐一一致（含 24.06 MB CoT 检查点，已于 2026-11-11 20:07 续传完成）。
 - Windows 本机绕过 Apptainer，直接执行 `scripts/test_smoke.py`：步骤 1–4 全部通过，退出码 0，45 个 ✓；步骤 5 因未配置 `OPENROUTER_API_KEY` 按设计 SKIP。
 - 阻塞项：无 Apptainer（WSL 被安全策略禁用、Docker daemon 未运行）、无 `OPENROUTER_API_KEY`；原论文主实验模型为 `openai/gpt-5.6-luna`，Config 默认却是 `moonshotai/kimi-k2.5`，换模型不能标注为原论文复现。
 
@@ -40,3 +41,8 @@
 
 > 依赖：交给 B 的是 `capture_proposal` / 版本快照接口；交给 D 的是稳定的 `snapshot_ref`、父/候选哈希与 G2 结果格式。
 > 所有「跑通」结论均附命令与退出码；本分支尚未调用任何真实付费模型 API。
+
+## 更新记录
+
+- 2026-11-11 20:08：24.06 MB `stage1.joblib` 续传完成；714 / 714 文件 Git blob SHA1 校验通过，报告、看板与说明中的「713 / 714」已更正。
+- 注：`main` 上 `docs/reproduction_progress.md` 与 `docs/reproduction_smoke_test.log` 为按本人要求保留的旧版本，数字未同步；本分支 `docs/memberC/` 为最新。
