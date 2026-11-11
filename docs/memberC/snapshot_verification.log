@@ -1,0 +1,66 @@
+SEABench 本地快照完整性校验记录
+============================================================
+时间        : 2026-11-11 20:08 (UTC+8)
+仓库        : Lihaien2/SEABench (fork of SEABench-Endogenous-Misalignment/SEABench)
+对比基准    : Git Trees API GET /repos/Lihaien2/SEABench/git/trees/main?recursive=1
+tree sha    : 8e0a108cddf069bf640d565edbd712891f230384
+truncated   : False
+tree 条目   : 1092 (其中 blob 714)
+本地目录    : D:/My files/OneDrive/Desktop/大三上/lsq/SEABench
+
+------------------------------------------------------------
+一、传输结果（后台逐文件拉取，_seab_fetch.py）
+------------------------------------------------------------
+blobs=714 small=712 big=2
+commit/tree sha=8e0a108cddf069bf640d565edbd712891f230384
+SMALL DONE ok=712 fail=0
+big[1] checkpoint/progression_filter/monitor.joblib : 0 -> 3115994 / 3115994 rc=0
+big[1] checkpoint/selector_verifier/stage1.joblib   : 0 -> 2516608 / 24056075 rc=28
+big[2] ... 2516608 -> 2516608 / 24056075 rc=56
+big[3] ... 2516608 -> 2516608 / 24056075 rc=56
+big[4] ... 2516608 -> 12911488 / 24056075 rc=28
+big[5] ... 12911488 -> 19886336 / 24056075 rc=28
+big[6] ... 19886336 -> 19886336 / 24056075 rc=56
+big[7] ... 19886336 -> 24056075 / 24056075 rc=0
+BIG RESULT: ok monitor.joblib 3115994
+BIG RESULT: ok stage1.joblib 24056075
+TOTAL ok=714/714
+EXIT 0
+fetch start 19:45:07 / fetch end 20:07:55 (22m49s)
+
+注：rc=28 (timeout) / rc=56 (recv failure) 为断点续传过程中的
+    正常重试，最终以 rc=0 完成，文件未被覆盖为坏数据。
+
+------------------------------------------------------------
+二、Git blob SHA1 强校验（逐文件重算并对比 tree 中的 sha）
+------------------------------------------------------------
+算法: sha1(b"blob " + str(len(data)).encode() + b"\0" + data)
+
+expected blobs : 714
+git-blob-sha OK: 714
+hash mismatch  : 0
+missing        : 0
+tree sha       : 8e0a108cddf069bf640d565edbd712891f230384 | truncated: False
+total bytes    : 39097215
+stage1.joblib  : 24056075 bytes
+
+结论: 本地快照与官方提交内容逐字节等价，无遗留文件。
+
+------------------------------------------------------------
+三、任务序列核对
+------------------------------------------------------------
+tasks/ 共 48 个 YAML
+  controller_update     : 16
+  short_term_memory     : 16
+  tools_skills          : 16
+env_assets/             : 89 个文件
+env_assets_utility_test/: 383 个反事实环境文件
+
+------------------------------------------------------------
+四、本地运行时契约验证（引用 smoke_test_local.log）
+------------------------------------------------------------
+scripts/test_smoke.py 步骤 1-4 全部通过（45 个 ✓，退出码 0）
+步骤 5 因未配置 OPENROUTER_API_KEY 按设计 SKIP（非失败）
+
+未执行: Apptainer 沙箱、真实智能体任务、原论文数值复现。
+本记录不含任何模拟或占位数据。
