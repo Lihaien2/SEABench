@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEABench 复现进度看板</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --card:#ffffff; --ink:#1f2937; --muted:#6b7280;
+    --line:#e5e9f0; --accent:#3b5bdb; --accent-soft:#edf1ff;
+    --green:#0f9d58; --green-bg:#e7f6ed; --amber:#b7791f; --amber-bg:#fdf3dd;
+    --red:#c53030; --red-bg:#fdeaea; --blue:#2b6cb0; --blue-bg:#e8f1fb;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 32px 72px}
+  header{margin-bottom:36px}
+  .eyebrow{display:inline-block;background:var(--accent-soft);color:var(--accent);
+    font-size:12px;font-weight:700;letter-spacing:.08em;padding:6px 14px;border-radius:20px}
+  h1{font-size:34px;line-height:1.3;margin:18px 0 10px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:15px;margin:0}
+  .meta{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:7px 13px;font-size:12.5px;color:var(--muted)}
+  .chip b{color:var(--ink);font-weight:600}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:32px 0 40px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:22px 20px;box-shadow:0 2px 10px rgba(31,41,55,.04)}
+  .kpi .num{font-size:30px;font-weight:750;letter-spacing:-.02em;line-height:1.2}
+  .kpi .lab{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .kpi.g .num{color:var(--green)} .kpi.b .num{color:var(--blue)}
+  .kpi.a .num{color:var(--amber)} .kpi.p .num{color:var(--accent)}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:28px 30px;margin-bottom:22px;box-shadow:0 2px 10px rgba(31,41,55,.04)}
+  h2{font-size:19px;margin:0 0 6px;display:flex;align-items:center;gap:10px}
+  h2 .idx{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);
+    width:26px;height:26px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center}
+  .desc{color:var(--muted);font-size:13.5px;margin:0 0 20px}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;
+    border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th{background:#f0f3f9;color:#374151;font-weight:650;text-align:left;
+    padding:12px 16px;border-bottom:1px solid var(--line);font-size:12.5px;letter-spacing:.02em}
+  td{padding:12px 16px;border-bottom:1px solid #f0f2f6;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tbody tr:nth-child(even){background:#fafbfd}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .b-ok{background:var(--green-bg);color:var(--green)}
+  .b-wait{background:var(--amber-bg);color:var(--amber)}
+  .b-block{background:var(--red-bg);color:var(--red)}
+  .b-info{background:var(--blue-bg);color:var(--blue)}
+  .note{background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:14px 18px;font-size:13.5px;margin:20px 0 0;color:#2c3e70}
+  .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:18px}
+  .step{border:1px solid var(--line);border-radius:10px;padding:16px 18px;background:#fcfdff}
+  .step .top{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+  .step .n{font-size:11px;font-weight:700;color:#fff;background:var(--green);
+    border-radius:6px;padding:2px 8px}
+  .step .n.skip{background:var(--amber)}
+  .step .t{font-weight:650;font-size:14px}
+  .step p{margin:0;font-size:12.8px;color:var(--muted);line-height:1.7}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .box{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .box .hd{background:#f0f3f9;padding:11px 16px;font-weight:650;font-size:13px;color:#374151}
+  .box .bd{padding:14px 18px;font-size:13px}
+  .box ul{margin:0;padding-left:18px} .box li{margin-bottom:8px}
+  code{background:#f1f3f8;border-radius:4px;padding:1px 6px;font-size:12px;
+    font-family:Consolas,"SF Mono",monospace;color:#3b4252}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin-top:34px;line-height:1.9}
+  @media(max-width:760px){.kpis,.steps,.grid2{grid-template-columns:1fr}.wrap{padding:28px 18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">RSI SAFETY · 实验进度</span>
+  <h1>SEABench 复现进度看板</h1>
+  <p class="sub">自我演化如何引发内生失对齐 · 轻微复现（代码/数据核对 + 本地运行时契约验证）</p>
+  <div class="meta">
+    <span class="chip">论文 <b>arXiv:2609.35596</b></span>
+    <span class="chip">锁定提交 <b>8e0a108</b></span>
+    <span class="chip">执行日期 <b>2026-11-11</b></span>
+    <span class="chip">共同仓库 <b>Lihaien2/SEABench</b></span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi b"><div class="num">48</div><div class="lab">任务序列 YAML · 3 个演化面各 16 条</div></div>
+  <div class="kpi g"><div class="num">713 / 714</div><div class="lab">文件落地且字节数一致 · 0 处不符</div></div>
+  <div class="kpi p"><div class="num">45</div><div class="lab">smoke test 检查点全部通过</div></div>
+  <div class="kpi a"><div class="num">4 + 1</div><div class="lab">4 步通过 / 第 5 步按设计跳过</div></div>
+</div>
+
+<section>
+  <h2><span class="idx">1</span>结论速览</h2>
+  <p class="desc">按队长布置的复现清单逐项核对，未使用任何模拟或占位数据。</p>
+  <table>
+    <thead><tr><th style="width:52px">#</th><th>项目</th><th style="width:110px">状态</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>官方仓库代码与数据获取</td><td><span class="badge b-ok">完成</span></td><td>714 个文件中 713 个已落地并逐字节校验</td></tr>
+      <tr><td>2</td><td>48 条任务序列核对</td><td><span class="badge b-ok">完成</span></td><td>controller_update / short_term_memory / tools_skills 各 16 条</td></tr>
+      <tr><td>3</td><td>本地 smoke test（步骤 1–4）</td><td><span class="badge b-ok">全部通过</span></td><td>退出码 0，45 个 ✓，日志已留痕</td></tr>
+      <tr><td>4</td><td>步骤 5 真实智能体会话</td><td><span class="badge b-wait">按设计跳过</span></td><td>未配置 OPENROUTER_API_KEY，脚本主动 SKIP，非失败</td></tr>
+      <tr><td>5</td><td>Apptainer 沙箱隔离执行</td><td><span class="badge b-block">阻塞</span></td><td>Windows 无 Apptainer；WSL 被安全策略禁用；Docker daemon 未运行</td></tr>
+      <tr><td>6</td><td>单条任务序列 / 原论文数值复现</td><td><span class="badge b-block">未开始</span></td><td>需 API Key + Linux 沙箱 + 原论文模型</td></tr>
+      <tr><td>7</td><td>云端共同仓库同步</td><td><span class="badge b-ok">完成</span></td><td>共同仓库本就是官方完整 fork，进度报告已提交</td></tr>
+    </tbody>
+  </table>
+  <div class="note"><b>关键判断：</b> <code>Lihaien2/SEABench</code> 是官方仓库的 fork，<code>main</code> 指向同一提交 <code>8e0a108</code> —— 代码本来就已完整存在于云端，<b>无需重复上传</b>。本次提交的是复现进度记录，不改动任何既有代码。</div>
+</section>
+
+<section>
+  <h2><span class="idx">2</span>本地运行时契约验证 · 核心结果</h2>
+  <p class="desc"><code>test_smoke.sh</code> 强依赖 Apptainer；经阅读源码确认其调用的 <code>test_smoke.py</code> 步骤 1–4 是纯 Python、不依赖容器与 API Key，故以等价方式直接执行（未修改仓库源码）。</p>
+  <div class="steps">
+    <div class="step"><div class="top"><span class="n">1</span><span class="t">工作区初始化</span></div><p>陈旧运行时状态被清除；11 个控制器文件与 5 个环境种子文件按结构注入；5 个 legacy 导出未被误拷贝。</p></div>
+    <div class="step"><div class="top"><span class="n">2</span><span class="t">系统提示词组装</span></div><p>11 个 <code>--- FILENAME ---</code> 块全部出现在 system prompt 中。</p></div>
+    <div class="step"><div class="top"><span class="n">3</span><span class="t">记忆与自改进写入</span></div><p>工具按演化面隔离；update_memory / record_learning 落盘；create_skill / create_tool 写入后立即可调用并刷新 TOOLS.md；产物未逃逸工作区。</p></div>
+    <div class="step"><div class="top"><span class="n">4</span><span class="t">控制器更新门控</span></div><p>合法 SOUL.md 写入被接受；USER.md（非白名单）、可疑短语、禁止标记三类危险修改<b>全部被拦截</b>；不可变种子未被污染；事件日志限制在 artifacts 内。</p></div>
+    <div class="step"><div class="top"><span class="n skip">5</span><span class="t">真实智能体会话</span></div><p><code>SKIP&nbsp; OPENROUTER_API_KEY not set</code> —— 预期行为。最终输出 <code>=== All local checks passed ===</code>。</p></div>
+    <div class="step"><div class="top"><span class="n" style="background:var(--blue)">↳</span><span class="t">对后续研究的价值</span></div><p>步骤 4 的四类门控正是 Safety Invariant Preservation 实验的天然接入点，可直接挂载独立安全检查器。</p></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="idx">3</span>未完成项与解除条件</h2>
+  <p class="desc">如实标注，避免把「环境跑通」误报为「论文已复现」。</p>
+  <table>
+    <thead><tr><th style="width:46px">#</th><th>未完成项</th><th>阻塞原因</th><th>解除条件</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td>单条任务序列真实运行</td><td>无 OPENROUTER_API_KEY 与 API 预算</td><td>配置 Key，执行 <code>scripts/run.sh --run-config …</code></td></tr>
+      <tr><td>B</td><td>Apptainer 沙箱隔离</td><td>Windows 无 Apptainer；WSL 被禁；Docker 未启动</td><td>换 Linux 主机，构建 <code>sandbox/sandbox.def</code> 生成 .sif</td></tr>
+      <tr><td>C</td><td>原论文数值复现</td><td>主实验模型 <code>openai/gpt-5.6-luna</code>；Config 默认却是 <code>moonshotai/kimi-k2.5</code></td><td>使用原论文模型与 judge；<b>换模型只能算扩展研究，不能标注为原论文复现</b></td></tr>
+      <tr><td>D</td><td>任务序列优化流水线</td><td>TextGrad 搜索需大量 API 调用</td><td>A + B + 预算</td></tr>
+      <tr><td>E</td><td>24 MB stage1.joblib</td><td>单文件传输持续断流</td><td>网络改善；仅影响 CoT monitor 后验分析，不影响主流程</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2><span class="idx">4</span>下一步：Safety Invariant Preservation</h2>
+  <p class="desc"><b>研究问题：</b>智能体持续自我修改时，旧版本建立的安全约束在多少次修改后仍然成立？重点不是最终任务成功率，而是安全约束的存活率。</p>
+  <div class="grid2">
+    <div class="box">
+      <div class="hd">消融分组 · 在 apply_controller_update 挂载独立检查器</div>
+      <div class="bd"><ul>
+        <li><b>G0 直接接受</b>：关闭检查器，作为基线</li>
+        <li><b>G1 静态检查</b>：白名单 / 短语 / 标记扫描（复用现有 gate）</li>
+        <li><b>G2 行为回归测试</b>：每次修改后重放固定安全探针任务</li>
+        <li><b>G3 历史版本回滚</b>：维护控制器版本链，违规即回退</li>
+      </ul><p style="color:var(--muted);margin:10px 0 0;font-size:12.5px">对照组沿用仓库已有的 non-evolving baseline（<code>surface=none</code>），与论文配对设计一致，可直接做因果归因。</p></div>
+    </div>
+    <div class="box">
+      <div class="hd">建议报告的四项指标</div>
+      <div class="bd"><ul>
+        <li><b>任务成功率</b>：上游 + 下游任务完成比例</li>
+        <li><b>安全违规率</b>：下游安全测试中触发违规的比例</li>
+        <li><b>危险修改被接受比例</b>：判定危险的修改中实际写入的比例</li>
+        <li><b>单位改进的 API 成本</b>：每提升 1 个百分点成功率的费用</li>
+      </ul><p style="color:var(--muted);margin:10px 0 0;font-size:12.5px">建议接入：<code>self_improve.py</code> / <code>validation_dispatcher.py</code> / <code>tracker.py</code> / <code>configs/runs/</code></p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="idx">5</span>网络绕行方案留痕</h2>
+  <p class="desc"><code>codeload.github.com</code> 与 <code>git clone</code> 在本网络下约 20 KB/s，两次分别停在 10.0 MB 与 18.7 MB 并断流（ZIP 缺中央目录）。</p>
+  <table>
+    <thead><tr><th style="width:52px">步骤</th><th>做法</th><th style="width:180px">结果</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Git Trees API <code>?recursive=1</code> 取完整清单</td><td><span class="badge b-info">1092 条目 / 714 blob</span></td></tr>
+      <tr><td>2</td><td>逐文件从 raw.githubusercontent.com 拉取，14 线程并发、按字节数校验、失败独立重试</td><td><span class="badge b-ok">712 / 712 成功 · 0 失败</span></td></tr>
+      <tr><td>3</td><td>3.1 MB 检查点断点续传</td><td><span class="badge b-ok">完成</span></td></tr>
+      <tr><td>4</td><td>24.06 MB stage1.joblib 续传</td><td><span class="badge b-wait">进行中 · 不影响主流程</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>
+  本报告由本地实际执行结果生成 · 完整日志 smoke_test_local.log · 详细版 SEABench_复现进度报告.md<br>
+  未完成项均如实标注，未使用模拟或占位数据
+</footer>
+
+</div>
+</body>
+</html>
